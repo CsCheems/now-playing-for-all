@@ -289,7 +289,7 @@ namespace ChemitaDev.NowPlaying
             appId = appId.ToLowerInvariant();
 
             if (appId.Contains("spotify")) return "spotify";
-            if (appId.Contains("zunemusic")) return "zunemedia";
+            if (appId.Contains("zunemusic")) return "zunemusic";
             if (appId.Contains("groove")) return "groove";
             if (appId.Contains("vlc")) return "vlc";
             if (appId.Contains("chrome")) return "chrome";
