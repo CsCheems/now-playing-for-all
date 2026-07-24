@@ -9,15 +9,15 @@ namespace ChemitaDev.NowPlaying
 {
     public sealed class NowPlayingInfo
     {
-        public string AppId        { get; set; } = "";
-        public string Title        { get; set; } = "";
-        public string Artist       { get; set; } = "";
-        public string Album        { get; set; } = "";
-        public bool   IsPlaying    { get; set; }
-        public long   PositionMs   { get; set; }
-        public long   DurationMs   { get; set; }
+        public string AppId { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Artist { get; set; } = "";
+        public string Album { get; set; } = "";
+        public bool IsPlaying { get; set; }
+        public long PositionMs { get; set; }
+        public long DurationMs { get; set; }
         public string ThumbnailUrl { get; set; }
-        public bool   IsCurrent    { get; set; }
+        public bool IsCurrent { get; set; }
     }
 
     public static class NowPlayingReader
@@ -106,13 +106,13 @@ namespace ChemitaDev.NowPlaying
         private static NowPlayingInfo BuildInfo(
             GlobalSystemMediaTransportControlsSession session, bool isCurrent)
         {
-            var props    = session.TryGetMediaPropertiesAsync().GetAwaiter().GetResult();
+            var props = session.TryGetMediaPropertiesAsync().GetAwaiter().GetResult();
             var playback = session.GetPlaybackInfo();
             var timeline = session.GetTimelineProperties();
 
             long reportedPosition = (long)timeline.Position.TotalMilliseconds;
-            long duration         = (long)timeline.EndTime.TotalMilliseconds;
-            bool isPlaying        = playback.PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
+            long duration = (long)timeline.EndTime.TotalMilliseconds;
+            bool isPlaying = playback.PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
 
             var state = GetState(session.SourceAppUserModelId ?? "");
 
@@ -123,10 +123,10 @@ namespace ChemitaDev.NowPlaying
             if (songChanged)
             {
                 state.LastReportedPosition = reportedPosition;
-                state.LastDuration         = duration;
-                state.LastPlaying          = isPlaying;
-                state.AnchorTimestamp      = _clock.ElapsedMilliseconds;
-                state.LastRawReported      = reportedPosition;
+                state.LastDuration = duration;
+                state.LastPlaying = isPlaying;
+                state.AnchorTimestamp = _clock.ElapsedMilliseconds;
+                state.LastRawReported = reportedPosition;
             }
             else
             {
@@ -135,15 +135,15 @@ namespace ChemitaDev.NowPlaying
 
             return new NowPlayingInfo
             {
-                AppId        = GetAppName(session.SourceAppUserModelId),
-                Title        = props.Title ?? "",
-                Artist       = props.Artist ?? "",
-                Album        = props.AlbumTitle ?? "",
-                IsPlaying    = isPlaying,
-                PositionMs   = GetInterpolatedPosition(state),
-                DurationMs   = duration,
+                AppId = GetAppName(session.SourceAppUserModelId),
+                Title = props.Title ?? "",
+                Artist = props.Artist ?? "",
+                Album = props.AlbumTitle ?? "",
+                IsPlaying = isPlaying,
+                PositionMs = GetInterpolatedPosition(state),
+                DurationMs = duration,
                 ThumbnailUrl = GetCachedThumbnail(state, props),
-                IsCurrent    = isCurrent
+                IsCurrent = isCurrent
             };
         }
 
@@ -202,15 +202,15 @@ namespace ChemitaDev.NowPlaying
             GlobalSystemMediaTransportControlsSessionMediaProperties props)
         {
             bool songChanged =
-                state.CachedTitle  != props.Title  ||
+                state.CachedTitle != props.Title  ||
                 state.CachedArtist != props.Artist ||
-                state.CachedAlbum  != props.AlbumTitle;
+                state.CachedAlbum != props.AlbumTitle;
 
             if (!songChanged) return state.CachedThumbDataUri;
 
-            state.CachedTitle        = props.Title;
-            state.CachedArtist       = props.Artist;
-            state.CachedAlbum        = props.AlbumTitle;
+            state.CachedTitle = props.Title;
+            state.CachedArtist = props.Artist;
+            state.CachedAlbum = props.AlbumTitle;
             state.CachedThumbDataUri = ReadThumbnailDataUri(props);
             return state.CachedThumbDataUri;
         }
@@ -254,10 +254,10 @@ namespace ChemitaDev.NowPlaying
             if (state.LastDuration != duration || state.LastPlaying != isPlaying)
             {
                 state.LastReportedPosition = reportedPosition;
-                state.LastDuration         = duration;
-                state.LastPlaying          = isPlaying;
-                state.AnchorTimestamp      = _clock.ElapsedMilliseconds;
-                state.LastRawReported      = reportedPosition;
+                state.LastDuration = duration;
+                state.LastPlaying = isPlaying;
+                state.AnchorTimestamp = _clock.ElapsedMilliseconds;
+                state.LastRawReported = reportedPosition;
                 return;
             }
 
@@ -271,14 +271,14 @@ namespace ChemitaDev.NowPlaying
             if (drift > 1500)
             {
                 state.LastReportedPosition = reportedPosition;
-                state.AnchorTimestamp      = _clock.ElapsedMilliseconds;
+                state.AnchorTimestamp = _clock.ElapsedMilliseconds;
                 return;
             }
 
             if (drift > 250)
             {
                 state.LastReportedPosition = (virtualPosition + reportedPosition) / 2;
-                state.AnchorTimestamp      = _clock.ElapsedMilliseconds;
+                state.AnchorTimestamp = _clock.ElapsedMilliseconds;
             }
         }
 
@@ -288,25 +288,25 @@ namespace ChemitaDev.NowPlaying
 
             appId = appId.ToLowerInvariant();
 
-            if (appId.Contains("spotify"))     return "Spotify";
-            if (appId.Contains("zunemusic"))   return "Media Player";
-            if (appId.Contains("groove"))      return "Groove Music";
-            if (appId.Contains("vlc"))         return "VLC";
-            if (appId.Contains("chrome"))      return "Google Chrome";
-            if (appId.Contains("msedge"))      return "Microsoft Edge";
-            if (appId.Contains("brave"))       return "Brave";
-            if (appId.Contains("firefox"))     return "Firefox";
-            if (appId.Contains("opera"))       return "Opera";
-            if (appId.Contains("discord"))     return "Discord";
+            if (appId.Contains("spotify")) return "Spotify";
+            if (appId.Contains("zunemusic")) return "Media Player";
+            if (appId.Contains("groove")) return "Groove Music";
+            if (appId.Contains("vlc")) return "VLC";
+            if (appId.Contains("chrome")) return "Google Chrome";
+            if (appId.Contains("msedge")) return "Microsoft Edge";
+            if (appId.Contains("brave")) return "Brave";
+            if (appId.Contains("firefox")) return "Firefox";
+            if (appId.Contains("opera")) return "Opera";
+            if (appId.Contains("discord")) return "Discord";
             if (appId.Contains("amazonmusic")) return "Amazon Music";
             if (appId.Contains("amazon music")) return "Amazon Music";
-            if (appId.Contains("itunes"))      return "iTunes";
-            if (appId.Contains("apple"))       return "Apple Music";
-            if (appId.Contains("tidal"))       return "Tidal";
-            if (appId.Contains("deezer"))      return "Deezer";
-            if (appId.Contains("foobar"))      return "foobar2000";
-            if (appId.Contains("winamp"))      return "Winamp";
-            if (appId.Contains("youtube"))      return "YouTube";
+            if (appId.Contains("itunes")) return "iTunes";
+            if (appId.Contains("apple")) return "Apple Music";
+            if (appId.Contains("tidal")) return "Tidal";
+            if (appId.Contains("deezer")) return "Deezer";
+            if (appId.Contains("foobar")) return "foobar2000";
+            if (appId.Contains("winamp")) return "Winamp";
+            if (appId.Contains("youtube")) return "YouTube";
             //idk all the apps, i havent even tried the apple/itunes, im just guessing by the .exe
             //also not every platform is available in my area so feel free to fill/fix it with more 
             //services
