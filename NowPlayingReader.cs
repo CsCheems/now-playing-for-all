@@ -288,25 +288,23 @@ namespace ChemitaDev.NowPlaying
 
             appId = appId.ToLowerInvariant();
 
-            if (appId.Contains("spotify")) return "Spotify";
-            if (appId.Contains("zunemusic")) return "Media Player";
-            if (appId.Contains("groove")) return "Groove Music";
-            if (appId.Contains("vlc")) return "VLC";
-            if (appId.Contains("chrome")) return "Google Chrome";
-            if (appId.Contains("msedge")) return "Microsoft Edge";
-            if (appId.Contains("brave")) return "Brave";
-            if (appId.Contains("firefox")) return "Firefox";
-            if (appId.Contains("opera")) return "Opera";
-            if (appId.Contains("discord")) return "Discord";
-            if (appId.Contains("amazonmusic")) return "Amazon Music";
-            if (appId.Contains("amazon music")) return "Amazon Music";
-            if (appId.Contains("itunes")) return "iTunes";
-            if (appId.Contains("apple")) return "Apple Music";
-            if (appId.Contains("tidal")) return "Tidal";
-            if (appId.Contains("deezer")) return "Deezer";
+            if (appId.Contains("spotify")) return "spotify";
+            if (appId.Contains("zunemusic")) return "zunemedia";
+            if (appId.Contains("groove")) return "groove";
+            if (appId.Contains("vlc")) return "vlc";
+            if (appId.Contains("chrome")) return "chrome";
+            if (appId.Contains("msedge")) return "microsoftedge";
+            if (appId.Contains("brave")) return "brave";
+            if (appId.Contains("firefox")) return "firefox";
+            if (appId.Contains("opera")) return "opera";
+            if (appId.Contains("discord")) return "discord";
+            if (appId.Contains("amazon")) return "amazonmusic";
+            if (appId.Contains("itunes")) return "itunes";
+            if (appId.Contains("apple")) return "applemusic";
+            if (appId.Contains("tidal")) return "tidal";
+            if (appId.Contains("deezer")) return "deezer";
             if (appId.Contains("foobar")) return "foobar2000";
-            if (appId.Contains("winamp")) return "Winamp";
-            if (appId.Contains("youtube")) return "YouTube";
+            if (appId.Contains("winamp")) return "winamp";
             //idk all the apps, i havent even tried the apple/itunes, im just guessing by the .exe
             //also not every platform is available in my area so feel free to fill/fix it with more 
             //services
