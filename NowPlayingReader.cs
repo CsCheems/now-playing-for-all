@@ -51,7 +51,13 @@ namespace ChemitaDev.NowPlaying
             return PollAll().Find(i => i.IsCurrent) ?? new NowPlayingInfo();
         }
 
+        // One poll at a time: the per-session state is mutated while reading.
         public static List<NowPlayingInfo> PollAll()
+        {
+            lock (_statesGate) return PollAllCore();
+        }
+
+        private static List<NowPlayingInfo> PollAllCore()
         {
             var result = new List<NowPlayingInfo>();
             try
@@ -185,7 +191,13 @@ namespace ChemitaDev.NowPlaying
                 state.CachedArtist != props.Artist ||
                 state.CachedAlbum != props.AlbumTitle;
 
-            if (!songChanged) return state.CachedThumbDataUri;
+            if (!songChanged)
+            {
+                // Some apps publish the image after the title, so retry while it is missing.
+                if (state.CachedThumbDataUri == null)
+                    state.CachedThumbDataUri = ReadThumbnailDataUri(props);
+                return state.CachedThumbDataUri;
+            }
 
             state.CachedTitle = props.Title;
             state.CachedArtist = props.Artist;
