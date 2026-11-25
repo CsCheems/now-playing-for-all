@@ -17,6 +17,8 @@ namespace ChemitaDev.NowPlaying
         public long PositionMs { get; set; }
         public long DurationMs { get; set; }
         public string ThumbnailUrl { get; set; }
+        // Goes up each time a new image is read; compare it to know if the image changed.
+        public int ThumbnailVersion { get; set; }
         public bool IsCurrent { get; set; }
     }
 
@@ -33,6 +35,7 @@ namespace ChemitaDev.NowPlaying
             public string CachedArtist;
             public string CachedAlbum;
             public string CachedThumbDataUri;
+            public int ThumbVersion;
 
             public long LastReportedPosition;
             public long LastDuration;
@@ -46,18 +49,20 @@ namespace ChemitaDev.NowPlaying
         private static readonly Dictionary<string, SessionState> _states =
             new Dictionary<string, SessionState>(StringComparer.Ordinal);
 
-        public static NowPlayingInfo Poll()
+        // includeThumbnail=false leaves ThumbnailUrl null (it is a big base64 string);
+        // use ThumbnailVersion to know when to ask for it again.
+        public static NowPlayingInfo Poll(bool includeThumbnail = true)
         {
-            return PollAll().Find(i => i.IsCurrent) ?? new NowPlayingInfo();
+            return PollAll(includeThumbnail).Find(i => i.IsCurrent) ?? new NowPlayingInfo();
         }
 
         // One poll at a time: the per-session state is mutated while reading.
-        public static List<NowPlayingInfo> PollAll()
+        public static List<NowPlayingInfo> PollAll(bool includeThumbnail = true)
         {
-            lock (_statesGate) return PollAllCore();
+            lock (_statesGate) return PollAllCore(includeThumbnail);
         }
 
-        private static List<NowPlayingInfo> PollAllCore()
+        private static List<NowPlayingInfo> PollAllCore(bool includeThumbnail)
         {
             var result = new List<NowPlayingInfo>();
             try
@@ -72,6 +77,7 @@ namespace ChemitaDev.NowPlaying
                 string currentId = current?.SourceAppUserModelId;
 
                 var seenIds = new HashSet<string>(StringComparer.Ordinal);
+                var perApp = new Dictionary<string, int>(StringComparer.Ordinal);
 
                 foreach (var session in sessions)
                 {
@@ -79,10 +85,15 @@ namespace ChemitaDev.NowPlaying
                     try
                     {
                         string id = session.SourceAppUserModelId ?? "";
-                        seenIds.Add(id);
+
+                        // shortcut: same-app sessions are told apart by list order, upgrade if Windows reorders them
+                        perApp.TryGetValue(id, out int n);
+                        perApp[id] = n + 1;
+                        string stateKey = n == 0 ? id : id + "#" + n;
+                        seenIds.Add(stateKey);
 
                         bool isCurrent = currentId != null && id == currentId;
-                        result.Add(BuildInfo(session, isCurrent));
+                        result.Add(BuildInfo(session, stateKey, isCurrent, includeThumbnail));
                     }
                     catch
                     {
@@ -101,7 +112,8 @@ namespace ChemitaDev.NowPlaying
         }
 
         private static NowPlayingInfo BuildInfo(
-            GlobalSystemMediaTransportControlsSession session, bool isCurrent)
+            GlobalSystemMediaTransportControlsSession session, string stateKey,
+            bool isCurrent, bool includeThumbnail)
         {
             var props = session.TryGetMediaPropertiesAsync().GetAwaiter().GetResult();
             var playback = session.GetPlaybackInfo();
@@ -111,7 +123,7 @@ namespace ChemitaDev.NowPlaying
             long duration = (long)timeline.EndTime.TotalMilliseconds;
             bool isPlaying = playback.PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
 
-            var state = GetState(session.SourceAppUserModelId ?? "");
+            var state = GetState(stateKey);
 
             bool songChanged = state.CachedTitle  != props.Title
                             || state.CachedArtist != props.Artist
@@ -130,6 +142,8 @@ namespace ChemitaDev.NowPlaying
                 SyncPlaybackClock(state, reportedPosition, duration, isPlaying);
             }
 
+            string thumb = GetCachedThumbnail(state, props);
+
             return new NowPlayingInfo
             {
                 AppId = GetAppName(session.SourceAppUserModelId),
@@ -139,7 +153,8 @@ namespace ChemitaDev.NowPlaying
                 IsPlaying = isPlaying,
                 PositionMs = GetInterpolatedPosition(state),
                 DurationMs = duration,
-                ThumbnailUrl = GetCachedThumbnail(state, props),
+                ThumbnailUrl = includeThumbnail ? thumb : null,
+                ThumbnailVersion = state.ThumbVersion,
                 IsCurrent = isCurrent
             };
         }
@@ -195,7 +210,10 @@ namespace ChemitaDev.NowPlaying
             {
                 // Some apps publish the image after the title, so retry while it is missing.
                 if (state.CachedThumbDataUri == null)
+                {
                     state.CachedThumbDataUri = ReadThumbnailDataUri(props);
+                    if (state.CachedThumbDataUri != null) state.ThumbVersion++;
+                }
                 return state.CachedThumbDataUri;
             }
 
@@ -203,6 +221,7 @@ namespace ChemitaDev.NowPlaying
             state.CachedArtist = props.Artist;
             state.CachedAlbum = props.AlbumTitle;
             state.CachedThumbDataUri = ReadThumbnailDataUri(props);
+            state.ThumbVersion++;
             return state.CachedThumbDataUri;
         }
 
@@ -217,8 +236,10 @@ namespace ChemitaDev.NowPlaying
                 using (var memory    = new MemoryStream())
                 {
                     netStream.CopyTo(memory);
-                    string base64 = Convert.ToBase64String(memory.ToArray());
-                    return "data:image/jpeg;base64," + base64;
+                    byte[] bytes = memory.ToArray();
+                    // PNG files start with 0x89 'P'; anything else is treated as JPEG
+                    string mime = bytes.Length > 1 && bytes[0] == 0x89 && bytes[1] == 0x50 ? "png" : "jpeg";
+                    return "data:image/" + mime + ";base64," + Convert.ToBase64String(bytes);
                 }
             }
             catch
