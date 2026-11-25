@@ -95,17 +95,17 @@ namespace ChemitaDev.NowPlaying
                         bool isCurrent = currentId != null && id == currentId;
                         result.Add(BuildInfo(session, stateKey, isCurrent, includeThumbnail));
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // I should send an error here but meh
+                        Debug.WriteLine("NowPlaying: session failed: " + ex);
                     }
                 }
 
                 PruneStaleStates(seenIds);
             }
-            catch
+            catch (Exception ex)
             {
-                // same
+                Debug.WriteLine("NowPlaying: poll failed: " + ex);
             }
 
             return result;
@@ -242,8 +242,9 @@ namespace ChemitaDev.NowPlaying
                     return "data:image/" + mime + ";base64," + Convert.ToBase64String(bytes);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine("NowPlaying: thumbnail failed: " + ex);
                 return null;
             }
         }
