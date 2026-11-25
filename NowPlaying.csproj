@@ -11,6 +11,9 @@
   <ItemGroup>
     <!-- Brings the Windows.* types and System.Runtime.WindowsRuntime without machine-specific paths. -->
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
+    <!-- The test project has its own .cs files; keep them out of the library. -->
+    <Compile Remove="NowPlaying.Tests/**" />
+    <InternalsVisibleTo Include="NowPlaying.Tests" />
   </ItemGroup>
 
 </Project>

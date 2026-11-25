@@ -49,6 +49,9 @@ namespace ChemitaDev.NowPlaying
         private static readonly Dictionary<string, SessionState> _states =
             new Dictionary<string, SessionState>(StringComparer.Ordinal);
 
+        // Both polls block the calling thread while Windows answers (about 1 ms here, measured
+        // from a console and from a thread with a UI sync context and no message loop: no deadlock).
+        // Call them from a background thread if the caller is a UI thread that must never stall.
         // includeThumbnail=false leaves ThumbnailUrl null (it is a big base64 string);
         // use ThumbnailVersion to know when to ask for it again.
         public static NowPlayingInfo Poll(bool includeThumbnail = true)
@@ -295,7 +298,7 @@ namespace ChemitaDev.NowPlaying
             }
         }
 
-        private static string GetAppName(string appId)
+        internal static string GetAppName(string appId)
         {
             if (string.IsNullOrWhiteSpace(appId)) return "Unknown";
 
