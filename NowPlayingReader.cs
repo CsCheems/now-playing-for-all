@@ -48,16 +48,7 @@ namespace ChemitaDev.NowPlaying
 
         public static NowPlayingInfo Poll()
         {
-            try
-            {
-                var session = GetCurrentSession();
-                if (session == null) return new NowPlayingInfo();
-                return BuildInfo(session, isCurrent: true);
-            }
-            catch
-            {
-                return new NowPlayingInfo();
-            }
+            return PollAll().Find(i => i.IsCurrent) ?? new NowPlayingInfo();
         }
 
         public static List<NowPlayingInfo> PollAll()
@@ -174,18 +165,6 @@ namespace ChemitaDev.NowPlaying
             }
         }
 
-        private static GlobalSystemMediaTransportControlsSession GetCurrentSession()
-        {
-            EnsureManager();
-            if (_manager == null) return null;
-
-            var current = _manager.GetCurrentSession();
-            if (current != null) return current;
-
-            var sessions = _manager.GetSessions();
-            return sessions.Count > 0 ? sessions[0] : null;
-        }
-
         private static void EnsureManager()
         {
             if (_manager != null) return;
@@ -296,14 +275,13 @@ namespace ChemitaDev.NowPlaying
             if (appId.Contains("msedge")) return "microsoftedge";
             if (appId.Contains("brave")) return "brave";
             if (appId.Contains("firefox")) return "firefox";
-            if (appId.Contains("opera")) return "opera";
-            if (appId.Contains("discord")) return "discord";
-            if (appId.Contains("amazon")) return "amazonmusic";
+            if (appId.Contains("operasoftware")) return "opera";
+            if (appId.Contains("amazonmobilellc")) return "amazonmusic";
             if (appId.Contains("itunes")) return "itunes";
             if (appId.Contains("apple")) return "applemusic";
             if (appId.Contains("tidal")) return "tidal";
             if (appId.Contains("deezer")) return "deezer";
-            if (appId.Contains("foobar")) return "foobar2000";
+            if (appId.Contains("foobar2000")) return "foobar2000";
             if (appId.Contains("winamp")) return "winamp";
             //idk all the apps, i havent even tried the apple/itunes, im just guessing by the .exe
             //also not every platform is available in my area so feel free to fill/fix it with more 
